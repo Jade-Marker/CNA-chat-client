@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Client
+namespace ClientNamespace
 {
     /// <summary>
     /// Interaction logic for ClientForm.xaml
@@ -41,10 +41,24 @@ namespace Client
 
         }
 
+        private void SendTypedMessage()
+        {
+            if (InputField.Text != "")
+            {
+                client.SendMessage(InputField.Text);
+                InputField.Text = "";
+            }
+        }
+
         private void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
-            client.SendMessage(InputField.Text);
-            InputField.Text = "";
+            SendTypedMessage();
+        }
+
+        private void InputField_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+                SendTypedMessage();
         }
     }
 }

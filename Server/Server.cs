@@ -46,13 +46,23 @@ namespace Server
         private void ClientMethod(Client client)
         {
             string receivedMessage;
-            client.Send("You have connected to the server");
+            client.Send("Server: " + "You have connected to the server");
 
             while ((receivedMessage = client.Read()) != null)
             {
-                string returnMessage = GetReturnMessage(receivedMessage);
+                if (receivedMessage.StartsWith("/"))
+                {
+                    string returnMessage = GetReturnMessage(receivedMessage);
 
-                client.Send(returnMessage);
+                    client.Send("Server: " + returnMessage);
+                }
+                else
+                {
+                    foreach (Client currClient in _clients)
+                    {
+                        currClient.Send(receivedMessage);
+                    }
+                }
             }
 
             client.Close();
@@ -66,15 +76,15 @@ namespace Server
 
             switch (code)
             {
-                case "Hi":
+                case "/hi":
                     response = "Hello";
                     break;
-                case "Test":
+                case "/test":
                     response = "New test";
                     break;
 
                 default:
-                    response = "Sorry, I don't understand";
+                    response = "Sorry, I don't understand the command " + code;
                     break;
             }
 

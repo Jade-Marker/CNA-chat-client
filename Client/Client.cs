@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Client
+namespace ClientNamespace
 {
     public class Client
     {
@@ -60,7 +60,7 @@ namespace Client
             {
                 while ((serverResponse = reader.ReadLine()) != null)
                 {
-                    clientForm.UpdateChatWindow("Server says: " + serverResponse);
+                    clientForm.UpdateChatWindow(serverResponse);
                 }
             }
             catch (System.IO.IOException)
