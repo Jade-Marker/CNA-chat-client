@@ -17,6 +17,9 @@ namespace Server
         private object _readLock;
         private object _writeLock;
 
+        private string _name;
+        public string Name { get { return _name; } private set { _name = value; } }
+
         public Client(Socket socket)
         {
             _readLock = new object();
@@ -27,6 +30,8 @@ namespace Server
             _stream = new NetworkStream(_socket);
             _reader = new StreamReader(_stream, Encoding.UTF8);
             _writer = new StreamWriter(_stream, Encoding.UTF8);
+
+            _name = "User";
         }
 
         public void Close()
@@ -52,6 +57,11 @@ namespace Server
                 _writer.WriteLine(message);
                 _writer.Flush();
             }
+        }
+
+        public void ChangeName(string name)
+        {
+            Name = name;
         }
 
     }

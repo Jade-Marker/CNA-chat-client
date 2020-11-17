@@ -52,7 +52,7 @@ namespace Server
             {
                 if (receivedMessage.StartsWith("/"))
                 {
-                    string returnMessage = GetReturnMessage(receivedMessage);
+                    string returnMessage = GetReturnMessage(receivedMessage, client);
 
                     client.Send("Server: " + returnMessage);
                 }
@@ -60,7 +60,7 @@ namespace Server
                 {
                     foreach (Client currClient in _clients)
                     {
-                        currClient.Send(receivedMessage);
+                        currClient.Send(client.Name + ": " + receivedMessage);
                     }
                 }
             }
@@ -70,17 +70,28 @@ namespace Server
             _clients.TryTake(out client);
         }
 
-        private string GetReturnMessage(string code)
+        private string GetReturnMessage(string code, Client client)
         {
             string response;
 
-            switch (code)
+            string command = ExtractCommand(code);
+            string arguments = ExtractArguments(code, command);
+
+            switch (command)
             {
                 case "/hi":
-                    response = "Hello";
+                    if (arguments == "")
+                        response = "Hello";
+                    else
+                        response = "/hi takes no arguments";
                     break;
                 case "/test":
                     response = "New test";
+                    break;
+
+                case "/name":
+                    client.ChangeName(arguments);
+                    response = "Name changed to " + arguments;
                     break;
 
                 default:
@@ -90,6 +101,24 @@ namespace Server
 
 
             return response;
+        }
+
+        private string ExtractCommand(string code)
+        {
+            string command = "";
+            if (code.StartsWith("/"))
+            {
+                command = code.Split(' ')[0];
+            }
+
+            return command;
+        }
+        private string ExtractArguments(string code, string command)
+        {
+            if (command.Length + 1 > code.Length)
+                return "";
+            else
+                return code.Substring(command.Length + 1, code.Length - command.Length -1);
         }
     }
 }
