@@ -54,7 +54,7 @@ namespace Server
                 {
                     string returnMessage = GetReturnMessage(receivedMessage, client);
 
-                    client.Send("Server: " + returnMessage);
+                    client.Send(returnMessage);
                 }
                 else
                 {
@@ -72,10 +72,12 @@ namespace Server
 
         private string GetReturnMessage(string code, Client client)
         {
-            string response;
+            string response = "";
 
             string command = ExtractCommand(code);
             string arguments = ExtractArguments(code, command);
+
+            bool prependServer = true;
 
             switch (command)
             {
@@ -90,8 +92,38 @@ namespace Server
                     break;
 
                 case "/name":
+                    if (arguments.Contains(" "))
+                    {
+                        response = "Name cannot contain spaces";
+                        break;
+                    }
                     client.ChangeName(arguments);
                     response = "Name changed to " + arguments;
+                    break;
+
+                case "/pm":
+                    string name = arguments.Split(' ')[0];
+                    string message = arguments.Substring(name.Length + 1);
+
+                    bool clientFound = false;
+
+                    foreach (Client currClient in _clients)
+                    {
+                        if (currClient.Name == name)
+                        {
+                            currClient.Send(client.Name + " says: " + message);
+                            response = client.Name + ": " + message;
+                            clientFound = true;
+                            prependServer = false;
+                        }
+
+                        if (clientFound)
+                            break;
+                    }
+
+                    if(!clientFound)
+                        response = name + " was not found";
+
                     break;
 
                 default:
@@ -99,6 +131,8 @@ namespace Server
                     break;
             }
 
+            if (prependServer)
+                response = "Server: " + response;
 
             return response;
         }
@@ -118,7 +152,7 @@ namespace Server
             if (command.Length + 1 > code.Length)
                 return "";
             else
-                return code.Substring(command.Length + 1, code.Length - command.Length -1);
+                return code.Substring(command.Length + 1);
         }
     }
 }
