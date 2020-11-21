@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Packets;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -45,23 +46,29 @@ namespace Server
 
         private void ClientMethod(Client client)
         {
-            string receivedMessage;
-            client.Send("Server: " + "You have connected to the server");
+            Packet receivedMessage;
+            client.Send(new ChatMessagePacket("Server: " + "You have connected to the server"));
 
             while ((receivedMessage = client.Read()) != null)
             {
-                if (receivedMessage.StartsWith("/"))
+                switch (receivedMessage.packetType)
                 {
-                    string returnMessage = GetReturnMessage(receivedMessage, client);
+                    case PacketType.CHAT_MESSAGE:
+                        string message = ((ChatMessagePacket)receivedMessage).message;
+                        if (message.StartsWith("/"))
+                        {
+                            string returnMessage = GetReturnMessage(message, client);
 
-                    client.Send(returnMessage);
-                }
-                else
-                {
-                    foreach (Client currClient in _clients)
-                    {
-                        currClient.Send(client.Name + ": " + receivedMessage);
-                    }
+                            client.Send(new ChatMessagePacket(returnMessage));
+                        }
+                        else
+                        {
+                            foreach (Client currClient in _clients)
+                            {
+                                currClient.Send(new ChatMessagePacket(client.Name + ": " + message));
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -111,7 +118,7 @@ namespace Server
                     {
                         if (currClient.Name == name)
                         {
-                            currClient.Send(client.Name + " says: " + message);
+                            currClient.Send(new ChatMessagePacket(client.Name + " says: " + message));
                             response = client.Name + ": " + message;
                             clientFound = true;
                             prependServer = false;

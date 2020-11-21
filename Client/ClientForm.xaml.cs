@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Packets;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -45,7 +46,7 @@ namespace ClientNamespace
         {
             if (InputField.Text != "")
             {
-                client.SendMessage(InputField.Text);
+                client.SendMessage(new ChatMessagePacket(InputField.Text));
                 InputField.Text = "";
             }
         }

@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Packets;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,8 +16,9 @@ namespace ClientNamespace
     {
         private TcpClient tcpClient;
         private NetworkStream stream;
-        private StreamWriter writer;
-        private StreamReader reader;
+        private BinaryWriter writer;
+        private BinaryReader reader;
+        private BinaryFormatter formatter;
         private ClientForm clientForm;
         public Client()
         {
@@ -28,8 +31,9 @@ namespace ClientNamespace
             {
                 tcpClient.Connect(IPAddress.Parse(ipAddress), port);
                 stream = tcpClient.GetStream();
-                reader = new StreamReader(stream);
-                writer = new StreamWriter(stream);
+                writer = new BinaryWriter(stream);
+                reader = new BinaryReader(stream);
+                formatter = new BinaryFormatter();
                 return true;
             }
             catch (Exception e)
@@ -50,17 +54,22 @@ namespace ClientNamespace
             thread.Start();
             clientForm.ShowDialog();
 
-            tcpClient.Close();
+            Close();
         }
 
         private void ProcessServerResponse()
         {
-            string serverResponse;
+            Packet serverResponse;
             try
             {
-                while ((serverResponse = reader.ReadLine()) != null)
+                while ((serverResponse = Read()) != null)
                 {
-                    clientForm.UpdateChatWindow(serverResponse);
+                    switch (serverResponse.packetType)
+                    {
+                        case PacketType.CHAT_MESSAGE:
+                            clientForm.UpdateChatWindow(((ChatMessagePacket)serverResponse).message);
+                            break;
+                    }
                 }
             }
             catch (System.IO.IOException)
@@ -70,10 +79,22 @@ namespace ClientNamespace
 
         }
 
-        public void SendMessage(string message)
+        private void Close()
         {
-            writer.WriteLine(message);
+            writer.Write(-1);
             writer.Flush();
+
+            tcpClient.Close();
+        }
+
+        private Packet Read()
+        {
+            return Packet.ReadPacket(reader, formatter);
+        }
+
+        public void SendMessage(Packet message)
+        {
+            Packet.SendPacket(message, formatter, writer);
         }
     }
 }
