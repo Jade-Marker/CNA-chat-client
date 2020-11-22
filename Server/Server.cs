@@ -70,15 +70,26 @@ namespace Server
                         }
                         break;
 
-                    case PacketType.CLIENT_NAME:
-                        client.ChangeName(((NamePacket)receivedMessage).name);
+                    case PacketType.CONNECTION_START:
+                        string newName = ((ConnectionPacket)receivedMessage).name;
+
+                        client.ChangeName(newName);
+                        foreach (Client currClient in _clients)
+                        {
+                            if (currClient != client)
+                                currClient.Send(new ChatMessagePacket(newName + " has connected"));
+                        }
                         break;
                 }
             }
 
             client.Close();
-
             _clients.TryRemove(client);
+
+            foreach (Client currClient in _clients)
+            {
+                currClient.Send(new ChatMessagePacket(client.Name + " disconnected"));
+            }
         }
 
         private string GetReturnMessage(string code, Client client)

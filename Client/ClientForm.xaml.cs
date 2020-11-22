@@ -73,7 +73,7 @@ namespace ClientNamespace
                 SubmitButton.IsEnabled = true;
                 MessageWindow.IsEnabled = true;
 
-                client.SendMessage(new NamePacket(NameBox.Text));
+                client.SendMessage(new ConnectionPacket(NameBox.Text));
                 client.Run();
             }
             else

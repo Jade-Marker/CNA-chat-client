@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 namespace Packets
 {
     [Serializable]
-    public class NamePacket : Packet
+    public class ConnectionPacket: Packet
     {
         public string name;
 
-        public NamePacket(string name)
+        public ConnectionPacket(string name)
         {
             this.name = name;
-            packetType = PacketType.CLIENT_NAME;
+            packetType = PacketType.CONNECTION_START;
         }
     }
 }

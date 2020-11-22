@@ -78,7 +78,7 @@ namespace ClientNamespace
 
         public void Close()
         {
-            if (tcpClient.Connected)
+            if (tcpClient != null && tcpClient.Connected)
             {
                 writer.Write(-1);
                 writer.Flush();

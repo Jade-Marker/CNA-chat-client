@@ -42,7 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChatMessagePacket.cs" />
-    <Compile Include="NamePacket.cs" />
+    <Compile Include="ConnectionPacket.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -12,7 +12,7 @@ namespace Packets
         EMPTY,
         CHAT_MESSAGE,
         PRIVATE_MESSAGE,
-        CLIENT_NAME
+        CONNECTION_START
     };
 
     [Serializable]
