@@ -22,13 +22,15 @@ namespace ClientNamespace
         private ClientForm clientForm;
         public Client()
         {
-            tcpClient = new TcpClient();
+            clientForm = new ClientForm(this);
+            clientForm.ShowDialog();
         }
 
         public bool Connect(string ipAddress, int port)
         {
             try
             {
+                tcpClient = new TcpClient();
                 tcpClient.Connect(IPAddress.Parse(ipAddress), port);
                 stream = tcpClient.GetStream();
                 writer = new BinaryWriter(stream);
@@ -45,16 +47,11 @@ namespace ClientNamespace
 
         public void Run()
         {
-            clientForm = new ClientForm(this);
-
             Thread thread = new Thread(() => 
             {
                 ProcessServerResponse();
             });
-            thread.Start();
-            clientForm.ShowDialog();
-
-            Close();
+            thread.Start();       
         }
 
         private void ProcessServerResponse()
@@ -79,12 +76,15 @@ namespace ClientNamespace
 
         }
 
-        private void Close()
+        public void Close()
         {
-            writer.Write(-1);
-            writer.Flush();
+            if (tcpClient.Connected)
+            {
+                writer.Write(-1);
+                writer.Flush();
 
-            tcpClient.Close();
+                tcpClient.Close();
+            }
         }
 
         private Packet Read()

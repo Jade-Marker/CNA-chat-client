@@ -61,5 +61,40 @@ namespace ClientNamespace
             if (e.Key == Key.Return)
                 SendTypedMessage();
         }
+
+        private void ConnectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (client.Connect("127.0.0.1", 4444))
+            {
+                ConnectionButton.IsEnabled = false;
+                NameBox.IsEnabled = false;
+                DisconnectButton.IsEnabled = true;
+                InputField.IsEnabled = true;
+                SubmitButton.IsEnabled = true;
+                MessageWindow.IsEnabled = true;
+
+                client.SendMessage(new NamePacket(NameBox.Text));
+                client.Run();
+            }
+            else
+                Console.WriteLine("Unable to connect to server");
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            client.Close();
+        }
+
+        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            ConnectionButton.IsEnabled = true;
+            NameBox.IsEnabled = true;
+            DisconnectButton.IsEnabled = false;
+            InputField.IsEnabled = false;
+            SubmitButton.IsEnabled = false;
+            MessageWindow.IsEnabled = false;
+
+            client.Close();
+        }
     }
 }

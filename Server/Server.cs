@@ -15,7 +15,7 @@ namespace Server
     class Server
     {
         private TcpListener _tcpListener;
-        private ConcurrentBag<Client> _clients;
+        private ConcurrentDictionary<Client, Client> _clients;
 
         public Server(string ipAddress, int port)
         {
@@ -24,7 +24,7 @@ namespace Server
 
         public void Start()
         {
-            _clients = new ConcurrentBag<Client>();
+            _clients = new ConcurrentDictionary<Client, Client>();
             _tcpListener.Start();
 
             while (true)
@@ -32,7 +32,7 @@ namespace Server
                 Socket socket = _tcpListener.AcceptSocket();
 
                 Client client = new Client(socket);
-                _clients.Add(client);
+                _clients.TryAdd(client, client);
 
                 Thread thread = new Thread(() => { ClientMethod(client); });
                 thread.Start();
@@ -63,18 +63,22 @@ namespace Server
                         }
                         else
                         {
-                            foreach (Client currClient in _clients)
+                            foreach(KeyValuePair<Client,Client> currClient in _clients)
                             {
-                                currClient.Send(new ChatMessagePacket(client.Name + ": " + message));
+                                currClient.Value.Send(new ChatMessagePacket(client.Name + ": " + message));
                             }
                         }
+                        break;
+
+                    case PacketType.CLIENT_NAME:
+                        client.ChangeName(((NamePacket)receivedMessage).name);
                         break;
                 }
             }
 
             client.Close();
 
-            _clients.TryTake(out client);
+            _clients.TryRemove(client, out client);
         }
 
         private string GetReturnMessage(string code, Client client)
@@ -98,38 +102,35 @@ namespace Server
                     response = "New test";
                     break;
 
-                case "/name":
-                    if (arguments.Contains(" "))
-                    {
-                        response = "Name cannot contain spaces";
-                        break;
-                    }
-                    client.ChangeName(arguments);
-                    response = "Name changed to " + arguments;
-                    break;
-
                 case "/pm":
                     string name = arguments.Split(' ')[0];
-                    string message = arguments.Substring(name.Length + 1);
 
-                    bool clientFound = false;
-
-                    foreach (Client currClient in _clients)
+                    if (name.Length + 1 >= arguments.Length)
+                        response = "No message attached";
+                    else
                     {
-                        if (currClient.Name == name)
+
+                        string message = arguments.Substring(name.Length + 1);
+
+                        bool clientFound = false;
+
+                        foreach (KeyValuePair<Client, Client> currClient in _clients)
                         {
-                            currClient.Send(new ChatMessagePacket(client.Name + " says: " + message));
-                            response = client.Name + ": " + message;
-                            clientFound = true;
-                            prependServer = false;
+                            if (currClient.Value.Name == name)
+                            {
+                                currClient.Value.Send(new ChatMessagePacket(client.Name + " says: " + message));
+                                response = client.Name + ": " + message;
+                                clientFound = true;
+                                prependServer = false;
+                            }
+
+                            if (clientFound)
+                                break;
                         }
 
-                        if (clientFound)
-                            break;
+                        if (!clientFound)
+                            response = name + " was not found";
                     }
-
-                    if(!clientFound)
-                        response = name + " was not found";
 
                     break;
 
