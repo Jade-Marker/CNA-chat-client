@@ -15,7 +15,7 @@ namespace Server
     class Server
     {
         private TcpListener _tcpListener;
-        private ConcurrentDictionary<Client, Client> _clients;
+        private ConcurrentSet<Client> _clients;
 
         public Server(string ipAddress, int port)
         {
@@ -24,7 +24,7 @@ namespace Server
 
         public void Start()
         {
-            _clients = new ConcurrentDictionary<Client, Client>();
+            _clients = new ConcurrentSet<Client>();
             _tcpListener.Start();
 
             while (true)
@@ -32,7 +32,7 @@ namespace Server
                 Socket socket = _tcpListener.AcceptSocket();
 
                 Client client = new Client(socket);
-                _clients.TryAdd(client, client);
+                _clients.TryAdd(client);
 
                 Thread thread = new Thread(() => { ClientMethod(client); });
                 thread.Start();
@@ -63,9 +63,9 @@ namespace Server
                         }
                         else
                         {
-                            foreach(KeyValuePair<Client,Client> currClient in _clients)
+                            foreach(Client currClient in _clients)
                             {
-                                currClient.Value.Send(new ChatMessagePacket(client.Name + ": " + message));
+                                currClient.Send(new ChatMessagePacket(client.Name + ": " + message));
                             }
                         }
                         break;
@@ -78,7 +78,7 @@ namespace Server
 
             client.Close();
 
-            _clients.TryRemove(client, out client);
+            _clients.TryRemove(client);
         }
 
         private string GetReturnMessage(string code, Client client)
@@ -114,11 +114,11 @@ namespace Server
 
                         bool clientFound = false;
 
-                        foreach (KeyValuePair<Client, Client> currClient in _clients)
+                        foreach (Client currClient in _clients)
                         {
-                            if (currClient.Value.Name == name)
+                            if (currClient.Name == name)
                             {
-                                currClient.Value.Send(new ChatMessagePacket(client.Name + " says: " + message));
+                                currClient.Send(new ChatMessagePacket(client.Name + " says: " + message));
                                 response = client.Name + ": " + message;
                                 clientFound = true;
                                 prependServer = false;
