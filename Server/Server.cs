@@ -77,8 +77,18 @@ namespace Server
                         foreach (Client currClient in _clients)
                         {
                             if (currClient != client)
+                            { 
                                 currClient.Send(new ChatMessagePacket(newName + " has connected"));
+                                currClient.Send(new ClientConnectPacket(newName));
+                            }
                         }
+
+                        List<string> clientNames = new List<string>();
+                        foreach (Client currClient in _clients)
+                        {
+                            clientNames.Add(currClient.Name);
+                        }
+                        client.Send(new ClientListPacket(clientNames));
                         break;
                 }
             }
@@ -89,6 +99,7 @@ namespace Server
             foreach (Client currClient in _clients)
             {
                 currClient.Send(new ChatMessagePacket(client.Name + " disconnected"));
+                currClient.Send(new ClientDisconnectPacket(client.Name));
             }
         }
 

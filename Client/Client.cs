@@ -66,6 +66,21 @@ namespace ClientNamespace
                         case PacketType.CHAT_MESSAGE:
                             clientForm.UpdateChatWindow(((ChatMessagePacket)serverResponse).message);
                             break;
+
+                        case PacketType.CLIENT_LIST:
+                            foreach (string name in ((ClientListPacket)serverResponse).clientNames)
+                            {
+                                clientForm.UpdateClientList(name);
+                            }
+                            break;
+
+                        case PacketType.CLIENT_CONNECT:
+                            clientForm.UpdateClientList(((ClientConnectPacket)serverResponse).name);
+                            break;
+
+                        case PacketType.CLIENT_DISCONNECT:
+                            clientForm.RemoveClient(((ClientDisconnectPacket)serverResponse).name);
+                            break;
                     }
                 }
             }
@@ -84,6 +99,8 @@ namespace ClientNamespace
                 writer.Flush();
 
                 tcpClient.Close();
+
+                clientForm.ClearClientList();
             }
         }
 

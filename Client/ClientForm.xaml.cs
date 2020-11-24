@@ -1,6 +1,7 @@
 ﻿using Packets;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -95,6 +96,31 @@ namespace ClientNamespace
             MessageWindow.IsEnabled = false;
 
             client.Close();
+        }
+
+        public void UpdateClientList(string name)
+        {
+            ClientList.Dispatcher.Invoke(() =>
+            {
+                ClientList.Items.Add(name);
+                ClientList.Items.SortDescriptions.Add(new SortDescription("", ListSortDirection.Ascending));
+            });
+        }
+
+        public void RemoveClient(string name)
+        {
+            ClientList.Dispatcher.Invoke(() =>
+            {
+                ClientList.Items.Remove(name);
+            });
+        }
+
+        public void ClearClientList()
+        {
+            ClientList.Dispatcher.Invoke(() =>
+            {
+                ClientList.Items.Clear();
+            });
         }
     }
 }

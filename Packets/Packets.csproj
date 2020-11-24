@@ -42,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChatMessagePacket.cs" />
+    <Compile Include="ClientConnectPacket.cs" />
+    <Compile Include="ClientDisconnectPacket.cs" />
+    <Compile Include="ClientListPacket.cs" />
     <Compile Include="ConnectionPacket.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
