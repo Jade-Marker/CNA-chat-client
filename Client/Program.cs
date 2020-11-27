@@ -12,11 +12,6 @@ namespace ClientNamespace
         static void Main(string[] args)
         {
             Client client = new Client();
-
-            if (client.Connect("127.0.0.1", 4444))
-                client.Run();
-            else
-                Console.WriteLine("Unable to connect to server");
         }
     }
 }

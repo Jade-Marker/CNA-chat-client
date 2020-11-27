@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Packets;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ namespace Server
     class Server
     {
         private TcpListener _tcpListener;
-        private ConcurrentBag<Client> _clients;
+        private ConcurrentSet<Client> _clients;
 
         public Server(string ipAddress, int port)
         {
@@ -23,7 +24,7 @@ namespace Server
 
         public void Start()
         {
-            _clients = new ConcurrentBag<Client>();
+            _clients = new ConcurrentSet<Client>();
             _tcpListener.Start();
 
             while (true)
@@ -31,7 +32,7 @@ namespace Server
                 Socket socket = _tcpListener.AcceptSocket();
 
                 Client client = new Client(socket);
-                _clients.Add(client);
+                _clients.TryAdd(client);
 
                 Thread thread = new Thread(() => { ClientMethod(client); });
                 thread.Start();
@@ -45,29 +46,90 @@ namespace Server
 
         private void ClientMethod(Client client)
         {
-            string receivedMessage;
-            client.Send("Server: " + "You have connected to the server");
+            Packet receivedMessage;
+            client.Send(new ChatMessagePacket("Server: " + "You have connected to the server"));
 
             while ((receivedMessage = client.Read()) != null)
             {
-                if (receivedMessage.StartsWith("/"))
+                switch (receivedMessage.packetType)
                 {
-                    string returnMessage = GetReturnMessage(receivedMessage, client);
+                    case PacketType.CHAT_MESSAGE:
+                        string message = ((ChatMessagePacket)receivedMessage).message;
+                        if (message.StartsWith("/"))
+                        {
+                            string returnMessage = GetReturnMessage(message, client);
 
-                    client.Send(returnMessage);
-                }
-                else
-                {
-                    foreach (Client currClient in _clients)
-                    {
-                        currClient.Send(client.Name + ": " + receivedMessage);
-                    }
+                            client.Send(new ChatMessagePacket(returnMessage));
+                        }
+                        else
+                        {
+                            foreach(Client currClient in _clients)
+                            {
+                                currClient.Send(new ChatMessagePacket(client.Name + ": " + message));
+                            }
+                        }
+                        break;
+
+                    case PacketType.CONNECTION_START:
+                        string newName = ((ConnectionPacket)receivedMessage).name;
+
+                        client.ChangeName(newName);
+                        foreach (Client currClient in _clients)
+                        {
+                            if (currClient != client)
+                            { 
+                                currClient.Send(new ChatMessagePacket(newName + " has connected"));
+                                currClient.Send(new ClientConnectPacket(newName));
+                            }
+                        }
+
+                        List<string> clientNames = new List<string>();
+                        foreach (Client currClient in _clients)
+                        {
+                            clientNames.Add(currClient.Name);
+                        }
+                        client.Send(new ClientListPacket(clientNames));
+                        break;
+
+                    case PacketType.PRIVATE_MESSAGE:
+                        string name = ((PrivateMessagePacket)receivedMessage).name;
+                        string privateMessage = ((PrivateMessagePacket)receivedMessage).message;
+
+                        if (name == client.Name)
+                        {
+                            client.Send(new ChatMessagePacket("You cannot pm yourself"));
+                        }
+                        else
+                        {
+                            bool clientFound = false;
+                            foreach (Client currClient in _clients)
+                            {
+                                if (currClient.Name == name)
+                                {
+                                    currClient.Send(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                                    clientFound = true;
+                                    break;
+                                }
+                            }
+
+                            if (clientFound)
+                                client.Send(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                            else
+                                client.Send(new ChatMessagePacket(name + " was not found"));
+                        }
+
+                        break;
                 }
             }
 
             client.Close();
+            _clients.TryRemove(client);
 
-            _clients.TryTake(out client);
+            foreach (Client currClient in _clients)
+            {
+                currClient.Send(new ChatMessagePacket(client.Name + " disconnected"));
+                currClient.Send(new ClientDisconnectPacket(client.Name));
+            }
         }
 
         private string GetReturnMessage(string code, Client client)
@@ -89,41 +151,6 @@ namespace Server
                     break;
                 case "/test":
                     response = "New test";
-                    break;
-
-                case "/name":
-                    if (arguments.Contains(" "))
-                    {
-                        response = "Name cannot contain spaces";
-                        break;
-                    }
-                    client.ChangeName(arguments);
-                    response = "Name changed to " + arguments;
-                    break;
-
-                case "/pm":
-                    string name = arguments.Split(' ')[0];
-                    string message = arguments.Substring(name.Length + 1);
-
-                    bool clientFound = false;
-
-                    foreach (Client currClient in _clients)
-                    {
-                        if (currClient.Name == name)
-                        {
-                            currClient.Send(client.Name + " says: " + message);
-                            response = client.Name + ": " + message;
-                            clientFound = true;
-                            prependServer = false;
-                        }
-
-                        if (clientFound)
-                            break;
-                    }
-
-                    if(!clientFound)
-                        response = name + " was not found";
-
                     break;
 
                 default:

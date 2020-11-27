@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Packets;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,8 +14,9 @@ namespace Server
     {
         private Socket _socket;
         private NetworkStream _stream;
-        private StreamReader _reader;
-        private StreamWriter _writer;
+        private BinaryReader _reader;
+        private BinaryWriter _writer;
+        private BinaryFormatter _formatter;
         private object _readLock;
         private object _writeLock;
 
@@ -28,8 +31,10 @@ namespace Server
             _socket = socket;
 
             _stream = new NetworkStream(_socket);
-            _reader = new StreamReader(_stream, Encoding.UTF8);
-            _writer = new StreamWriter(_stream, Encoding.UTF8);
+            _formatter = new BinaryFormatter();
+
+            _reader = new BinaryReader(_stream);
+            _writer = new BinaryWriter(_stream);
 
             _name = "User";
         }
@@ -42,20 +47,19 @@ namespace Server
             _socket.Close();
         }
 
-        public string Read()
+        public Packet Read()
         {
             lock(_readLock)
             {
-                return _reader.ReadLine();
+                return Packet.ReadPacket(_reader, _formatter);
             }
         }
 
-        public void Send(string message)
+        public void Send(Packet message)
         {
             lock (_writeLock)
             {
-                _writer.WriteLine(message);
-                _writer.Flush();
+                Packet.SendPacket(message, _formatter, _writer);
             }
         }
 
