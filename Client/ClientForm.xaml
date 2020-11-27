@@ -6,16 +6,17 @@
              xmlns:local="clr-namespace:ClientNamespace"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Width="800" Height="450" Closing ="Window_Closing">
-    <Grid>
-        <TextBox x:Name="MessageWindow" HorizontalAlignment="Center" Height="236" Margin="38,10,169,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="585" IsReadOnly="True" IsEnabled="False"/>
-        <TextBox x:Name="InputField"  HorizontalAlignment="Left" Height="75" TextWrapping="Wrap" VerticalAlignment="Top" Width="500" Margin="38,308,0,0" KeyDown="InputField_KeyDown" IsEnabled="False"/>
-        <Button x:Name="SubmitButton" Content="Send" HorizontalAlignment="Left" Margin="570,331,0,0" VerticalAlignment="Top" Width="118" Height="30" Click="SubmitButton_Click" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" RenderTransformOrigin="0.311,1.027" IsEnabled="False"/>
-        <Button x:Name="ConnectionButton" Content="Connect" HorizontalAlignment="Left" Height="23" Margin="237,265,0,0" VerticalAlignment="Top" Width="69" Click="ConnectionButton_Click"/>
-        <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="23" Margin="75,265,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="146"/>
-        <TextBlock HorizontalAlignment="Left" Height="23" Margin="38,265,0,0" TextWrapping="Wrap" Text="Name:" VerticalAlignment="Top" Width="37"/>
-        <Button x:Name="DisconnectButton" Content="Disconnect" HorizontalAlignment="Left" Height="23" Margin="320,265,0,0" VerticalAlignment="Top" Width="77" Click="DisconnectButton_Click" IsEnabled="False"/>
-        <ListBox x:Name="ClientList" HorizontalAlignment="Left" Height="236" Margin="648,10,0,0" VerticalAlignment="Top" Width="134" SelectionChanged="ClientList_SelectionChanged"/>
-        <TextBlock x:Name="TargetText" HorizontalAlignment="Left" Height="19" Margin="38,293,0,0" TextWrapping="Wrap" Text="All" VerticalAlignment="Top" Width="56"/>
-
-    </Grid>
+    <Viewbox>
+        <Grid>
+            <TextBox x:Name="MessageWindow" HorizontalAlignment="Center" Height="236" Margin="38,10,169,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="585" IsReadOnly="True" IsEnabled="False"/>
+            <TextBox x:Name="InputField"  HorizontalAlignment="Left" Height="75" TextWrapping="Wrap" VerticalAlignment="Top" Width="500" Margin="38,308,0,0" KeyDown="InputField_KeyDown" IsEnabled="False"/>
+            <Button x:Name="SubmitButton" Content="Send" HorizontalAlignment="Left" Margin="570,331,0,0" VerticalAlignment="Top" Width="118" Height="30" Click="SubmitButton_Click" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" RenderTransformOrigin="0.311,1.027" IsEnabled="False"/>
+            <Button x:Name="ConnectionButton" Content="Connect" HorizontalAlignment="Left" Height="23" Margin="237,265,0,0" VerticalAlignment="Top" Width="69" Click="ConnectionButton_Click"/>
+            <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="23" Margin="75,265,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="146"/>
+            <TextBlock HorizontalAlignment="Left" Height="23" Margin="38,265,0,0" TextWrapping="Wrap" Text="Name:" VerticalAlignment="Top" Width="37"/>
+            <Button x:Name="DisconnectButton" Content="Disconnect" HorizontalAlignment="Left" Height="23" Margin="320,265,0,0" VerticalAlignment="Top" Width="77" Click="DisconnectButton_Click" IsEnabled="False"/>
+            <ListBox x:Name="ClientList" HorizontalAlignment="Left" Height="236" Margin="648,10,0,0" VerticalAlignment="Top" Width="134" SelectionChanged="ClientList_SelectionChanged"/>
+            <TextBlock x:Name="TargetText" HorizontalAlignment="Left" Height="19" Margin="38,293,0,0" TextWrapping="Wrap" Text="All" VerticalAlignment="Top" Width="56"/>
+        </Grid>
+    </Viewbox>
 </Window>
