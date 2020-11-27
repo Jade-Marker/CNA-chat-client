@@ -14,7 +14,8 @@
         <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="23" Margin="75,265,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="146"/>
         <TextBlock HorizontalAlignment="Left" Height="23" Margin="38,265,0,0" TextWrapping="Wrap" Text="Name:" VerticalAlignment="Top" Width="37"/>
         <Button x:Name="DisconnectButton" Content="Disconnect" HorizontalAlignment="Left" Height="23" Margin="320,265,0,0" VerticalAlignment="Top" Width="77" Click="DisconnectButton_Click" IsEnabled="False"/>
-        <ListBox x:Name="ClientList" HorizontalAlignment="Left" Height="236" Margin="648,10,0,0" VerticalAlignment="Top" Width="134"/>
+        <ListBox x:Name="ClientList" HorizontalAlignment="Left" Height="236" Margin="648,10,0,0" VerticalAlignment="Top" Width="134" SelectionChanged="ClientList_SelectionChanged"/>
+        <TextBlock x:Name="TargetText" HorizontalAlignment="Left" Height="19" Margin="38,293,0,0" TextWrapping="Wrap" Text="All" VerticalAlignment="Top" Width="56"/>
 
     </Grid>
 </Window>

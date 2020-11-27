@@ -25,6 +25,7 @@ namespace ClientNamespace
         delegate void UpdateChatWindowDelegate(string message);
 
         Client client;
+        bool messageIsPrivate = false;
 
         public ClientForm(Client client)
         {
@@ -47,7 +48,10 @@ namespace ClientNamespace
         {
             if (InputField.Text != "")
             {
-                client.SendMessage(new ChatMessagePacket(InputField.Text));
+                if (!messageIsPrivate)
+                    client.SendMessage(new ChatMessagePacket(InputField.Text));
+                else
+                    client.SendMessage(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text));
                 InputField.Text = "";
             }
         }
@@ -61,6 +65,8 @@ namespace ClientNamespace
         {
             if (e.Key == Key.Return)
                 SendTypedMessage();
+            else if (e.Key == Key.Escape)
+                SetMessageState(false);
         }
 
         private void ConnectionButton_Click(object sender, RoutedEventArgs e)
@@ -121,6 +127,24 @@ namespace ClientNamespace
             {
                 ClientList.Items.Clear();
             });
+        }
+
+        private void ClientList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string name = (sender as ListBox).SelectedItem as string;
+            if (name != null)
+                SetMessageState(true, name);
+            else
+                SetMessageState(false);
+        }
+
+        private void SetMessageState(bool isPrivate, string target = "All")
+        {
+            if (isPrivate)
+                messageIsPrivate = true;
+            else
+                messageIsPrivate = false;
+            TargetText.Text = target;
         }
     }
 }

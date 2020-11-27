@@ -90,6 +90,35 @@ namespace Server
                         }
                         client.Send(new ClientListPacket(clientNames));
                         break;
+
+                    case PacketType.PRIVATE_MESSAGE:
+                        string name = ((PrivateMessagePacket)receivedMessage).name;
+                        string privateMessage = ((PrivateMessagePacket)receivedMessage).message;
+
+                        if (name == client.Name)
+                        {
+                            client.Send(new ChatMessagePacket("You cannot pm yourself"));
+                        }
+                        else
+                        {
+                            bool clientFound = false;
+                            foreach (Client currClient in _clients)
+                            {
+                                if (currClient.Name == name)
+                                {
+                                    currClient.Send(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                                    clientFound = true;
+                                    break;
+                                }
+                            }
+
+                            if (clientFound)
+                                client.Send(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                            else
+                                client.Send(new ChatMessagePacket(name + " was not found"));
+                        }
+
+                        break;
                 }
             }
 
@@ -122,38 +151,6 @@ namespace Server
                     break;
                 case "/test":
                     response = "New test";
-                    break;
-
-                case "/pm":
-                    string name = arguments.Split(' ')[0];
-
-                    if (name.Length + 1 >= arguments.Length)
-                        response = "No message attached";
-                    else
-                    {
-
-                        string message = arguments.Substring(name.Length + 1);
-
-                        bool clientFound = false;
-
-                        foreach (Client currClient in _clients)
-                        {
-                            if (currClient.Name == name)
-                            {
-                                currClient.Send(new ChatMessagePacket(client.Name + " says: " + message));
-                                response = client.Name + ": " + message;
-                                clientFound = true;
-                                prependServer = false;
-                            }
-
-                            if (clientFound)
-                                break;
-                        }
-
-                        if (!clientFound)
-                            response = name + " was not found";
-                    }
-
                     break;
 
                 default:
