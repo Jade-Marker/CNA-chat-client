@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:ClientNamespace"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Width="800" Height="450" Closing ="Window_Closing">
-    <Viewbox>
+    <Viewbox KeyDown="Viewbox_KeyDown">
         <Grid>
             <TextBox x:Name="MessageWindow" HorizontalAlignment="Center" Height="236" Margin="38,10,169,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="585" IsReadOnly="True" IsEnabled="False"/>
             <TextBox x:Name="InputField"  HorizontalAlignment="Left" Height="75" TextWrapping="Wrap" VerticalAlignment="Top" Width="500" Margin="38,308,0,0" KeyDown="InputField_KeyDown" IsEnabled="False"/>

@@ -65,8 +65,6 @@ namespace ClientNamespace
         {
             if (e.Key == Key.Return)
                 SendTypedMessage();
-            else if (e.Key == Key.Escape)
-                SetMessageState(false);
         }
 
         private void ConnectionButton_Click(object sender, RoutedEventArgs e)
@@ -145,6 +143,20 @@ namespace ClientNamespace
             else
                 messageIsPrivate = false;
             TargetText.Text = target;
+        }
+
+        private void SwapMessageState(string target)
+        {
+            if (messageIsPrivate)
+                SetMessageState(false);
+            else
+                SetMessageState(true, target);
+        }
+
+        private void Viewbox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Escape)
+                SwapMessageState(ClientList.SelectedItem as string);
         }
     }
 }
