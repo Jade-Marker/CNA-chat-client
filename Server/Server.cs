@@ -71,7 +71,7 @@ namespace Server
                         break;
 
                     case PacketType.CONNECTION_START:
-                        string newName = ((ConnectionPacket)receivedMessage).name;
+                        string newName = ValidateName(((ConnectionPacket)receivedMessage).name);                        
 
                         client.ChangeName(newName);
                         foreach (Client currClient in _clients)
@@ -180,6 +180,25 @@ namespace Server
                 return "";
             else
                 return code.Substring(command.Length + 1);
+        }
+
+        private string ValidateName(string name)
+        {
+            string newName = name;
+
+            List<string> names = new List<string>();
+            foreach (Client client in _clients)
+                names.Add(client.Name);
+
+            int loopCounter = 1;
+            while (names.Contains(newName))
+            {
+                newName = name + "(" + loopCounter + ")";
+
+                loopCounter++;
+            }
+
+            return newName;
         }
     }
 }
