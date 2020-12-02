@@ -64,7 +64,10 @@ namespace ClientNamespace
                     switch (serverResponse.packetType)
                     {
                         case PacketType.CHAT_MESSAGE:
-                            clientForm.UpdateChatWindow(((ChatMessagePacket)serverResponse).message);
+                            ChatMessagePacket chatMessagePacket = serverResponse as ChatMessagePacket;
+                            foreach(string message in chatMessagePacket.messages)
+                                clientForm.UpdateChatWindow(message);
+
                             break;
 
                         case PacketType.CLIENT_LIST:

@@ -9,11 +9,24 @@ namespace Packets
     [Serializable]
     public class ChatMessagePacket:Packet
     {
-        public string message;
+        public List<string> messages;
+        public string message { get {
+                if (messages.Count >= 1)
+                    return messages[0];
+                else
+                    return "";
+            } }
+
+        public ChatMessagePacket(List<string> messages)
+        {
+            this.messages = messages;
+            packetType = PacketType.CHAT_MESSAGE;
+        }
 
         public ChatMessagePacket(string message)
         {
-            this.message = message;
+            messages = new List<string>();
+            messages.Add(message);
             packetType = PacketType.CHAT_MESSAGE;
         }
     }

@@ -17,6 +17,8 @@ namespace Server
         private TcpListener _tcpListener;
         private ConcurrentSet<Client> _clients;
 
+        private HangmanGame hangman;
+
         public Server(string ipAddress, int port)
         {
             _tcpListener = new TcpListener(IPAddress.Parse(ipAddress), port);
@@ -26,6 +28,8 @@ namespace Server
         {
             _clients = new ConcurrentSet<Client>();
             _tcpListener.Start();
+
+            hangman = new HangmanGame();
 
             while (true)
             {
@@ -57,16 +61,17 @@ namespace Server
                         string message = ((ChatMessagePacket)receivedMessage).message;
                         if (message.StartsWith("/"))
                         {
-                            string returnMessage = GetReturnMessage(message, client);
+                            bool sendToAllClients;
+                            List<string> returnMessage = GetReturnMessage(message, client, out sendToAllClients);
 
-                            client.Send(new ChatMessagePacket(returnMessage));
+                            if (sendToAllClients)
+                                SendToAllClients(new ChatMessagePacket(returnMessage));
+                            else
+                                client.Send(new ChatMessagePacket(returnMessage));
                         }
                         else
                         {
-                            foreach(Client currClient in _clients)
-                            {
-                                currClient.Send(new ChatMessagePacket(client.Name + ": " + message));
-                            }
+                            SendToAllClients(new ChatMessagePacket(client.Name + ": " + message));
                         }
                         break;
 
@@ -125,41 +130,66 @@ namespace Server
             client.Close();
             _clients.TryRemove(client);
 
-            foreach (Client currClient in _clients)
-            {
-                currClient.Send(new ChatMessagePacket(client.Name + " disconnected"));
-                currClient.Send(new ClientDisconnectPacket(client.Name));
-            }
+            //foreach (Client currClient in _clients)
+            //{
+            //    currClient.Send(new ChatMessagePacket(client.Name + " disconnected"));
+            //    currClient.Send(new ClientDisconnectPacket(client.Name));
+            //}
+            SendToAllClients(new ChatMessagePacket(client.Name + " disconnected"));
+            SendToAllClients(new ClientDisconnectPacket(client.Name));
+
         }
 
-        private string GetReturnMessage(string code, Client client)
+        private List<string> GetReturnMessage(string code, Client client, out bool sendToAllClients)
         {
-            string response = "";
+            List<string> response = new List<string>();
 
             string command = ExtractCommand(code);
             string arguments = ExtractArguments(code, command);
 
             bool prependServer = true;
+            sendToAllClients = false;
 
             switch (command)
             {
                 case "/hi":
                     if (arguments == "")
-                        response = "Hello";
+                        response.Add("Hello");
                     else
-                        response = "/hi takes no arguments";
+                        response.Add("/hi takes no arguments");
                     break;
                 case "/test":
-                    response = "New test";
+                    response.Add("New test");
+                    break;
+
+                case "/game":
+                    if (hangman.GameRunning)
+                    {
+                        response = hangman.Guess(arguments, client.Name);
+                    }
+                    else
+                    {
+                        response.Add("New game of hangman started by " + client.Name);
+
+                        hangman.StartGame();
+
+                        response.AddRange(hangman.GetBoard());
+                    }
+
+                    sendToAllClients = true;
+                    prependServer = false;
                     break;
 
                 default:
-                    response = "Sorry, I don't understand the command " + code;
+                    response.Add("Sorry, I don't understand the command " + code);
                     break;
             }
 
             if (prependServer)
-                response = "Server: " + response;
+            {
+                for(int i = 0; i < response.Count; i++)
+                    response[i] = "Server: " + response[i];
+            }
 
             return response;
         }
@@ -199,6 +229,14 @@ namespace Server
             }
 
             return newName;
+        }
+
+        private void SendToAllClients(Packet packet)
+        {
+            foreach (Client currClient in _clients)
+            {
+                currClient.Send(packet);
+            }
         }
     }
 }
