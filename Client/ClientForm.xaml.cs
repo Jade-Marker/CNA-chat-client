@@ -49,9 +49,9 @@ namespace ClientNamespace
             if (InputField.Text != "")
             {
                 if (!messageIsPrivate)
-                    client.SendMessage(new ChatMessagePacket(InputField.Text));
+                    client.SendEncrypted(new ChatMessagePacket(InputField.Text));
                 else
-                    client.SendMessage(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text));
+                    client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text));
                 InputField.Text = "";
             }
         }
@@ -78,7 +78,7 @@ namespace ClientNamespace
                 SubmitButton.IsEnabled = true;
                 MessageWindow.IsEnabled = true;
 
-                client.SendMessage(new ConnectionPacket(NameBox.Text));
+                client.SendMessage(new ConnectionPacket(NameBox.Text, client.PublicKey));
                 client.Run();
             }
             else

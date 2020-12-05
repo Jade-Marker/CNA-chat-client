@@ -51,40 +51,23 @@ namespace Server
         private void ClientMethod(Client client)
         {
             Packet receivedMessage;
-            client.Send(new ChatMessagePacket("Server: " + "You have connected to the server"));
 
             while ((receivedMessage = client.Read()) != null)
             {
                 switch (receivedMessage.packetType)
                 {
-                    case PacketType.CHAT_MESSAGE:
-                        string message = ((ChatMessagePacket)receivedMessage).message;
-                        if (message.StartsWith("/"))
-                        {
-                            bool sendToAllClients;
-                            List<string> returnMessage = GetReturnMessage(message, client, out sendToAllClients);
-
-                            if (sendToAllClients)
-                                SendToAllClients(new ChatMessagePacket(returnMessage));
-                            else
-                                client.Send(new ChatMessagePacket(returnMessage));
-                        }
-                        else
-                        {
-                            SendToAllClients(new ChatMessagePacket(client.Name + ": " + message));
-                        }
-                        break;
-
                     case PacketType.CONNECTION_START:
-                        string newName = ValidateName(((ConnectionPacket)receivedMessage).name);                        
+                        string newName = ValidateName(((ConnectionPacket)receivedMessage).name);
+
+                        client.SetClientKey((receivedMessage as ConnectionPacket).PublicKey);
 
                         client.ChangeName(newName);
                         foreach (Client currClient in _clients)
                         {
                             if (currClient != client)
-                            { 
-                                currClient.Send(new ChatMessagePacket(newName + " has connected"));
-                                currClient.Send(new ClientConnectPacket(newName));
+                            {
+                                currClient.SendEncrypted(new ChatMessagePacket(newName + " has connected"));
+                                currClient.SendEncrypted(new ClientConnectPacket(newName));
                             }
                         }
 
@@ -93,36 +76,63 @@ namespace Server
                         {
                             clientNames.Add(currClient.Name);
                         }
-                        client.Send(new ClientListPacket(clientNames));
-                        break;
+                        client.Send(new ServerKeyPacket(client.PublicKey));
+                        client.SendEncrypted(new ClientListPacket(clientNames));
+                        client.SendEncrypted(new ChatMessagePacket("Server: " + "You have connected to the server"));
 
-                    case PacketType.PRIVATE_MESSAGE:
-                        string name = ((PrivateMessagePacket)receivedMessage).name;
-                        string privateMessage = ((PrivateMessagePacket)receivedMessage).message;
+                        break;                   
 
-                        if (name == client.Name)
+                    case PacketType.ENCRYPTED:
+                        Packet decrypted = client.Decrypt(receivedMessage as EncryptedPacket);
+
+                        switch (decrypted.packetType)
                         {
-                            client.Send(new ChatMessagePacket("You cannot pm yourself"));
-                        }
-                        else
-                        {
-                            bool clientFound = false;
-                            foreach (Client currClient in _clients)
-                            {
-                                if (currClient.Name == name)
+                            case PacketType.CHAT_MESSAGE:
+                                string message = ((ChatMessagePacket)decrypted).message;
+                                if (message.StartsWith("/"))
                                 {
-                                    currClient.Send(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
-                                    clientFound = true;
-                                    break;
+                                    bool sendToAllClients;
+                                    List<string> returnMessage = GetReturnMessage(message, client, out sendToAllClients);
+
+                                    if (sendToAllClients)
+                                        SendToAllClients(new ChatMessagePacket(returnMessage));
+                                    else
+                                        client.SendEncrypted(new ChatMessagePacket(returnMessage));
                                 }
-                            }
+                                else
+                                {
+                                    SendToAllClients(new ChatMessagePacket(client.Name + ": " + message));
+                                }
+                                break;
 
-                            if (clientFound)
-                                client.Send(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
-                            else
-                                client.Send(new ChatMessagePacket(name + " was not found"));
+                            case PacketType.PRIVATE_MESSAGE:
+                                string name = ((PrivateMessagePacket)decrypted).name;
+                                string privateMessage = ((PrivateMessagePacket)decrypted).message;
+
+                                if (name == client.Name)
+                                {
+                                    client.SendEncrypted(new ChatMessagePacket("You cannot pm yourself"));
+                                }
+                                else
+                                {
+                                    bool clientFound = false;
+                                    foreach (Client currClient in _clients)
+                                    {
+                                        if (currClient.Name == name)
+                                        {
+                                            currClient.SendEncrypted(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                                            clientFound = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (clientFound)
+                                        client.SendEncrypted(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                                    else
+                                        client.SendEncrypted(new ChatMessagePacket(name + " was not found"));
+                                }
+                                break;
                         }
-
                         break;
                 }
             }
@@ -130,11 +140,6 @@ namespace Server
             client.Close();
             _clients.TryRemove(client);
 
-            //foreach (Client currClient in _clients)
-            //{
-            //    currClient.Send(new ChatMessagePacket(client.Name + " disconnected"));
-            //    currClient.Send(new ClientDisconnectPacket(client.Name));
-            //}
             SendToAllClients(new ChatMessagePacket(client.Name + " disconnected"));
             SendToAllClients(new ClientDisconnectPacket(client.Name));
 
@@ -235,7 +240,7 @@ namespace Server
         {
             foreach (Client currClient in _clients)
             {
-                currClient.Send(packet);
+                currClient.SendEncrypted(packet);
             }
         }
     }

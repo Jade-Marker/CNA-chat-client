@@ -8,15 +8,14 @@ using System.Threading.Tasks;
 namespace Packets
 {
     [Serializable]
-    public class ConnectionPacket: Packet
+    public class ServerKeyPacket:Packet
     {
-        public string name;
         public RSAParameters PublicKey;
-        public ConnectionPacket(string name, RSAParameters PublicKey)
+
+        public ServerKeyPacket(RSAParameters PublicKey)
         {
-            this.name = name;
             this.PublicKey = PublicKey;
-            packetType = PacketType.CONNECTION_START;
+            packetType = PacketType.SERVER_KEY;
         }
     }
 }

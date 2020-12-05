@@ -8,14 +8,17 @@ using System.Threading.Tasks;
 
 namespace Packets
 {
-    public enum PacketType {
+    public enum PacketType
+    {
         EMPTY,
         CHAT_MESSAGE,
         PRIVATE_MESSAGE,
         CONNECTION_START,
         CLIENT_LIST,
         CLIENT_CONNECT,
-        CLIENT_DISCONNECT
+        CLIENT_DISCONNECT,
+        ENCRYPTED,
+        SERVER_KEY
     };
 
     [Serializable]

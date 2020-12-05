@@ -46,9 +46,11 @@
     <Compile Include="ClientDisconnectPacket.cs" />
     <Compile Include="ClientListPacket.cs" />
     <Compile Include="ConnectionPacket.cs" />
+    <Compile Include="EncryptedPacket.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PrivateMessagePacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerKeyPacket.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
