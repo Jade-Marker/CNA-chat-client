@@ -9,6 +9,7 @@ namespace Server
     public class HangmanGame
     {
         public bool GameRunning { get; private set; }
+        public bool GameStarting { get; private set; }
         private int _guessesLeft;
         private List<char> _correctLetters;
         private List<char> _incorrectLetters;
@@ -16,12 +17,31 @@ namespace Server
         private string _word;
         private Random _random;
 
+        public List<string> Players { get; private set; }
+
         public HangmanGame()
         {
             GameRunning = false;
+            GameStarting = false;
             _correctLetters = new List<char>();
             _incorrectLetters = new List<char>();
             _random = new Random();
+            Players = new List<string>();
+        }
+
+        private void ResetPlayerList()
+        {
+            Players.Clear();
+        }
+
+        public void AddPlayer(string name)
+        {
+            Players.Add(name);
+        }
+
+        public void Starting()
+        {
+            GameStarting = true;
         }
 
         private bool ValidateGuess(string guess, out string response)
@@ -56,6 +76,7 @@ namespace Server
         public void StartGame()
         {
             GameRunning = true;
+            GameStarting = false;
             _guessesLeft = 6;
 
             _correctLetters.Clear();
@@ -127,11 +148,13 @@ namespace Server
             {
                 response.Add("You win!");
                 GameRunning = false;
+                ResetPlayerList();
             }
             else if (_guessesLeft == 0)
             {
                 response.Add("You lose");
                 GameRunning = false;
+                ResetPlayerList();
             }
 
             return response;

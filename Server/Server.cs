@@ -17,7 +17,7 @@ namespace Server
         private TcpListener _tcpListener;
         private ConcurrentSet<Client> _clients;
 
-        private HangmanGame hangman;
+        private List<HangmanGame> hangmanGames;
 
         public Server(string ipAddress, int port)
         {
@@ -29,7 +29,7 @@ namespace Server
             _clients = new ConcurrentSet<Client>();
             _tcpListener.Start();
 
-            hangman = new HangmanGame();
+            hangmanGames = new List<HangmanGame>();
 
             while (true)
             {
@@ -92,12 +92,15 @@ namespace Server
                                 if (message.StartsWith("/"))
                                 {
                                     bool sendToAllClients;
-                                    List<string> returnMessage = GetReturnMessage(message, client, out sendToAllClients);
+                                    List<string> clientList;
+                                    List<string> returnMessage = GetReturnMessage(message, client, out sendToAllClients, out clientList);
 
                                     if (sendToAllClients)
                                         SendToAllClients(new ChatMessagePacket(returnMessage));
                                     else
-                                        client.SendEncrypted(new ChatMessagePacket(returnMessage));
+                                    {
+                                        SendToSpecificClients(new ChatMessagePacket(returnMessage), clientList);
+                                    }
                                 }
                                 else
                                 {
@@ -142,10 +145,9 @@ namespace Server
 
             SendToAllClients(new ChatMessagePacket(client.Name + " disconnected"));
             SendToAllClients(new ClientDisconnectPacket(client.Name));
-
         }
 
-        private List<string> GetReturnMessage(string code, Client client, out bool sendToAllClients)
+        private List<string> GetReturnMessage(string code, Client client, out bool sendToAllClients, out List<string> clientsToSendTo)
         {
             List<string> response = new List<string>();
 
@@ -154,6 +156,8 @@ namespace Server
 
             bool prependServer = true;
             sendToAllClients = false;
+
+            clientsToSendTo = new List<string>() { client.Name };
 
             switch (command)
             {
@@ -168,20 +172,11 @@ namespace Server
                     break;
 
                 case "/game":
-                    if (hangman.GameRunning)
+                    lock (hangmanGames)
                     {
-                        response = hangman.Guess(arguments, client.Name);
-                    }
-                    else
-                    {
-                        response.Add("New game of hangman started by " + client.Name);
-
-                        hangman.StartGame();
-
-                        response.AddRange(hangman.GetBoard());
+                        HandleHangmanGame(client, ref clientsToSendTo, ref response, arguments);
                     }
 
-                    sendToAllClients = true;
                     prependServer = false;
                     break;
 
@@ -197,7 +192,7 @@ namespace Server
             }
 
             return response;
-        }
+        }   
 
         private string ExtractCommand(string code)
         {
@@ -242,6 +237,164 @@ namespace Server
             {
                 currClient.SendEncrypted(packet);
             }
+        }
+
+        private void SendToSpecificClients(Packet packet, List<string> clientsToSendTo)
+        {
+            foreach (Client currClient in _clients)
+            {
+                if (clientsToSendTo.Contains(currClient.Name))
+                    currClient.SendEncrypted(packet);
+            }
+        }
+
+        private void HandleHangmanGame(Client client, ref List<string> clientsToSendTo, ref List<string> response, string arguments)
+        {
+            HangmanGame hangmanGame;
+            bool isInGame = FindGameClientIsIn(out hangmanGame, client.Name);
+
+            if (isInGame && hangmanGame.GameRunning)
+            {
+                clientsToSendTo.Remove(client.Name);                //Remove client so that when adding Players, client isn't repeated
+                clientsToSendTo.AddRange(hangmanGame.Players);
+                response = hangmanGame.Guess(arguments, client.Name);
+
+
+                if (!hangmanGame.GameRunning)                       //If game is not running here, then the game just ended, so it can be removed from hangmanGames
+                    hangmanGames.Remove(hangmanGame);
+            }
+            else
+            {
+                switch (arguments)
+                {
+                    case "":
+                        HangmanHandleEmpty(client, clientsToSendTo, response, hangmanGame);
+                        break;
+
+                    case "join":
+                        HangmanHandleJoin(client, clientsToSendTo, response, isInGame);
+                        break;
+
+                    case "start":
+                        HangmanHandleStart(client, clientsToSendTo, response);
+                        break;
+
+                    default:
+                        response.Add("Sorry, I don't understand the argument " + arguments);
+                        break;
+                }
+            }
+        }
+
+        private void HangmanHandleEmpty(Client client, List<string> clientsToSendTo, List<string> response, HangmanGame hangmanGame)
+        {
+            int currentGame = hangmanGames.Count - 1;
+
+            if (IsGameAvailable())
+            {
+                if (hangmanGame == hangmanGames[currentGame])
+                    response.Add("You are already in that game");
+                else
+                    JoinGame(hangmanGames[currentGame], client.Name, response, clientsToSendTo);
+            }
+            else
+            {
+                CreateHangmanGame(response, client.Name);
+                clientsToSendTo.AddRange(GetClientsNotInGames());
+            }
+        }
+
+        private void HangmanHandleJoin(Client client, List<string> clientsToSendTo, List<string> response, bool isInGame)
+        {
+            int currentGame = hangmanGames.Count - 1;
+
+            if (isInGame)
+                response.Add("You are already in a game");
+            else
+            {
+                if (IsGameAvailable())
+                    JoinGame(hangmanGames[currentGame], client.Name, response, clientsToSendTo);
+                else
+                    response.Add("No game available to join. Try /game to start a new game");
+            }
+        }
+
+        private void HangmanHandleStart(Client client, List<string> clientsToSendTo, List<string> response)
+        {
+            int currentGame = hangmanGames.Count - 1;
+
+            if (IsGameAvailable())
+            {
+                if (hangmanGames[currentGame].Players[0] == client.Name)
+                {
+                    hangmanGames[currentGame].StartGame();
+                    response.AddRange(hangmanGames[currentGame].GetBoard());
+                    clientsToSendTo.AddRange(hangmanGames[currentGame].Players);
+                }
+                else
+                    response.Add("Only the host can start the game");
+            }
+            else
+                response.Add("No game available to start");
+        }
+
+        private void CreateHangmanGame(List<string> response, string client)
+        {
+            HangmanGame hangman = new HangmanGame();
+            hangmanGames.Add(hangman);
+            hangman.Starting();
+            hangman.AddPlayer(client);
+            response.Add("New game of hangman started by " + client);
+            response.Add("Type /game join to join");
+            response.Add("The host can type /game start to start");
+        }
+
+        private void JoinGame(HangmanGame hangmanGame, string client, List<string> response, List<string> clientsToSendTo)
+        {
+            hangmanGame.AddPlayer(client);
+            response.Add(client + " has joined");
+            clientsToSendTo.AddRange(hangmanGame.Players);
+        }
+
+        private bool IsGameAvailable()
+        {
+            return (hangmanGames.Count > 0 && hangmanGames[hangmanGames.Count - 1].GameStarting);
+        }
+
+        private List<string> GetClientsNotInGames()
+        {
+            List<string> clientsNotInGames = new List<string>();
+
+            List<string> clientsInGames = new List<string>();
+            foreach (HangmanGame hangmanGame in hangmanGames)
+            {
+                clientsInGames.AddRange(hangmanGame.Players);
+            }
+
+            foreach (Client currClient in _clients)
+            {
+                if (!clientsInGames.Contains(currClient.Name))
+                {
+                    clientsNotInGames.Add(currClient.Name);
+                }
+            }
+
+            return clientsNotInGames;
+        }
+
+        private bool FindGameClientIsIn(out HangmanGame hangmanGame, string clientName)
+        {
+            foreach (HangmanGame hangman in hangmanGames)
+            {
+                if (hangman.Players.Contains(clientName))
+                {
+                    hangmanGame = hangman;
+                    return true;
+                }
+            }
+
+            hangmanGame = null;
+            return false;
         }
     }
 }
