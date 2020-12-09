@@ -20,14 +20,12 @@ namespace Server
         private BinaryFormatter _formatter;
         private object _readLock;
         private object _writeLock;
-
         private string _name;
+        private RSACryptoServiceProvider _rsaProvider;
+        private RSAParameters _privateKey;
+        private RSAParameters _clientKey;
 
-        private RSACryptoServiceProvider RSAProvider;
         public RSAParameters PublicKey { get; private set; }
-        private RSAParameters Private;
-        private RSAParameters ClientKey;
-
         public string Name { get { return _name; } private set { _name = value; } }
 
         public Client(Socket socket)
@@ -45,9 +43,9 @@ namespace Server
 
             _name = "User";
 
-            RSAProvider = new RSACryptoServiceProvider(Encryption.KeySize);
-            PublicKey = RSAProvider.ExportParameters(false);
-            Private = RSAProvider.ExportParameters(true);
+            _rsaProvider = new RSACryptoServiceProvider(Encryption.KeySize);
+            PublicKey = _rsaProvider.ExportParameters(false);
+            _privateKey = _rsaProvider.ExportParameters(true);
         }
 
         public void Close()
@@ -80,12 +78,12 @@ namespace Server
 
         public EncryptedPacket Encrypt(Packet message)
         {
-            return EncryptedPacket.EncryptPacket(message, _formatter, ClientKey, RSAProvider);
+            return EncryptedPacket.EncryptPacket(message, _formatter, _clientKey, _rsaProvider);
         }
 
         public Packet Decrypt(EncryptedPacket message)
         {
-            return EncryptedPacket.DecryptPacket(message, _formatter, Private, RSAProvider);
+            return EncryptedPacket.DecryptPacket(message, _formatter, _privateKey, _rsaProvider);
         }
 
         public void ChangeName(string name)
@@ -95,7 +93,7 @@ namespace Server
 
         public void SetClientKey(RSAParameters ClientKey)
         {
-            this.ClientKey = ClientKey;
+            this._clientKey = ClientKey;
         }
     }
 }

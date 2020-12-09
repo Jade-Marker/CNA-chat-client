@@ -10,11 +10,11 @@ namespace Packets
     [Serializable]
     public class ServerKeyPacket:Packet
     {
-        public RSAParameters PublicKey;
+        public RSAParameters publicKey;
 
-        public ServerKeyPacket(RSAParameters PublicKey)
+        public ServerKeyPacket(RSAParameters publicKey)
         {
-            this.PublicKey = PublicKey;
+            this.publicKey = publicKey;
             packetType = PacketType.SERVER_KEY;
         }
     }

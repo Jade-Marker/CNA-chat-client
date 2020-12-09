@@ -22,16 +22,14 @@ namespace ClientNamespace
     /// </summary>
     public partial class ClientForm : Window
     {
-        delegate void UpdateChatWindowDelegate(string message);
-
-        Client client;
-        bool messageIsPrivate = false;
+        Client _client;
+        bool _messageIsPrivate = false;
 
         public ClientForm(Client client)
         {
             InitializeComponent();
 
-            this.client = client;
+            _client = client;
         }
 
         public void UpdateChatWindow(string message)
@@ -48,10 +46,10 @@ namespace ClientNamespace
         {
             if (InputField.Text != "")
             {
-                if (!messageIsPrivate)
-                    client.SendEncrypted(new ChatMessagePacket(InputField.Text));
+                if (!_messageIsPrivate)
+                    _client.SendEncrypted(new ChatMessagePacket(InputField.Text));
                 else
-                    client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text));
+                    _client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text));
                 InputField.Text = "";
             }
         }
@@ -69,7 +67,7 @@ namespace ClientNamespace
 
         private void ConnectionButton_Click(object sender, RoutedEventArgs e)
         {
-            if (client.Connect("127.0.0.1", 4444))
+            if (_client.Connect("127.0.0.1", 4444))
             {
                 ConnectionButton.IsEnabled = false;
                 NameBox.IsEnabled = false;
@@ -78,8 +76,8 @@ namespace ClientNamespace
                 SubmitButton.IsEnabled = true;
                 MessageWindow.IsEnabled = true;
 
-                client.SendMessage(new ConnectionPacket(NameBox.Text, client.PublicKey));
-                client.Run();
+                _client.SendMessage(new ConnectionPacket(NameBox.Text, _client.PublicKey));
+                _client.Run();
             }
             else
                 Console.WriteLine("Unable to connect to server");
@@ -87,7 +85,7 @@ namespace ClientNamespace
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            client.Close();
+            _client.Close();
         }
 
         private void DisconnectButton_Click(object sender, RoutedEventArgs e)
@@ -99,7 +97,7 @@ namespace ClientNamespace
             SubmitButton.IsEnabled = false;
             MessageWindow.IsEnabled = false;
 
-            client.Close();
+            _client.Close();
         }
 
         public void UpdateClientList(string name)
@@ -139,15 +137,15 @@ namespace ClientNamespace
         private void SetMessageState(bool isPrivate, string target = "All")
         {
             if (isPrivate)
-                messageIsPrivate = true;
+                _messageIsPrivate = true;
             else
-                messageIsPrivate = false;
+                _messageIsPrivate = false;
             TargetText.Text = target;
         }
 
         private void SwapMessageState(string target)
         {
-            if (messageIsPrivate)
+            if (_messageIsPrivate)
                 SetMessageState(false);
             else
                 SetMessageState(true, target);

@@ -11,11 +11,11 @@ namespace Packets
     public class ConnectionPacket: Packet
     {
         public string name;
-        public RSAParameters PublicKey;
-        public ConnectionPacket(string name, RSAParameters PublicKey)
+        public RSAParameters publicKey;
+        public ConnectionPacket(string name, RSAParameters publicKey)
         {
             this.name = name;
-            this.PublicKey = PublicKey;
+            this.publicKey = publicKey;
             packetType = PacketType.CONNECTION_START;
         }
     }

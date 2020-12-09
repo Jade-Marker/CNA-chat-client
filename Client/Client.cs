@@ -15,36 +15,36 @@ namespace ClientNamespace
 {
     public class Client
     {
-        private TcpClient tcpClient;
-        private NetworkStream stream;
-        private BinaryWriter writer;
-        private BinaryReader reader;
-        private BinaryFormatter formatter;
-        private ClientForm clientForm;
-        private RSACryptoServiceProvider RSAProvider;
-        private RSAParameters PrivateKey;
-        private RSAParameters ServerKey;
+        private TcpClient _tcpClient;
+        private NetworkStream _stream;
+        private BinaryWriter _writer;
+        private BinaryReader _reader;
+        private BinaryFormatter _formatter;
+        private ClientForm _clientForm;
+        private RSACryptoServiceProvider _rsaProvider;
+        private RSAParameters _privateKey;
+        private RSAParameters _serverKey;
         public RSAParameters PublicKey { get; private set; }
 
         public Client()
         {
-            clientForm = new ClientForm(this);
-            clientForm.ShowDialog();
+            _clientForm = new ClientForm(this);
+            _clientForm.ShowDialog();
         }
 
         public bool Connect(string ipAddress, int port)
         {
             try
             {
-                tcpClient = new TcpClient();
-                tcpClient.Connect(IPAddress.Parse(ipAddress), port);
-                stream = tcpClient.GetStream();
-                writer = new BinaryWriter(stream);
-                reader = new BinaryReader(stream);
-                formatter = new BinaryFormatter();
-                RSAProvider = new RSACryptoServiceProvider(Encryption.KeySize);
-                PublicKey = RSAProvider.ExportParameters(false);
-                PrivateKey = RSAProvider.ExportParameters(true);
+                _tcpClient = new TcpClient();
+                _tcpClient.Connect(IPAddress.Parse(ipAddress), port);
+                _stream = _tcpClient.GetStream();
+                _writer = new BinaryWriter(_stream);
+                _reader = new BinaryReader(_stream);
+                _formatter = new BinaryFormatter();
+                _rsaProvider = new RSACryptoServiceProvider(Encryption.KeySize);
+                PublicKey = _rsaProvider.ExportParameters(false);
+                _privateKey = _rsaProvider.ExportParameters(true);
                 return true;
             }
             catch (Exception e)
@@ -74,33 +74,33 @@ namespace ClientNamespace
                     {
                         case PacketType.SERVER_KEY:
                             ServerKeyPacket serverKeyPacket = serverResponse as ServerKeyPacket;
-                            ServerKey = serverKeyPacket.PublicKey;
+                            _serverKey = serverKeyPacket.publicKey;
                             break;
 
                         case PacketType.ENCRYPTED:
-                            Packet decrypted = EncryptedPacket.DecryptPacket(serverResponse as EncryptedPacket, formatter, PrivateKey, RSAProvider);
+                            Packet decrypted = EncryptedPacket.DecryptPacket(serverResponse as EncryptedPacket, _formatter, _privateKey, _rsaProvider);
 
                             switch (decrypted.packetType)
                             {
                                 case PacketType.CHAT_MESSAGE:
                                     ChatMessagePacket chatMessagePacket = decrypted as ChatMessagePacket;
                                     foreach (string message in chatMessagePacket.messages)
-                                        clientForm.UpdateChatWindow(message);
+                                        _clientForm.UpdateChatWindow(message);
 
                                     break;
 
                                 case PacketType.CLIENT_CONNECT:
-                                    clientForm.UpdateClientList((decrypted as ClientConnectPacket).name);
+                                    _clientForm.UpdateClientList((decrypted as ClientConnectPacket).name);
                                     break;
 
                                 case PacketType.CLIENT_DISCONNECT:
-                                    clientForm.RemoveClient((decrypted as ClientDisconnectPacket).name);
+                                    _clientForm.RemoveClient((decrypted as ClientDisconnectPacket).name);
                                     break;
 
                                 case PacketType.CLIENT_LIST:
                                     foreach (string name in (decrypted as ClientListPacket).clientNames)
                                     {
-                                        clientForm.UpdateClientList(name);
+                                        _clientForm.UpdateClientList(name);
                                     }
                                     break;
                             }
@@ -118,30 +118,30 @@ namespace ClientNamespace
 
         public void Close()
         {
-            if (tcpClient != null && tcpClient.Connected)
+            if (_tcpClient != null && _tcpClient.Connected)
             {
-                writer.Write(-1);
-                writer.Flush();
+                _writer.Write(-1);
+                _writer.Flush();
 
-                tcpClient.Close();
+                _tcpClient.Close();
 
-                clientForm.ClearClientList();
+                _clientForm.ClearClientList();
             }
         }
 
         private Packet Read()
         {
-            return Packet.ReadPacket(reader, formatter);
+            return Packet.ReadPacket(_reader, _formatter);
         }
 
         public void SendMessage(Packet message)
         {
-            Packet.SendPacket(message, formatter, writer);
+            Packet.SendPacket(message, _formatter, _writer);
         }
 
         public void SendEncrypted(Packet message)
         {
-            Packet.SendPacket(EncryptedPacket.EncryptPacket(message, formatter, ServerKey, RSAProvider), formatter, writer);
+            Packet.SendPacket(EncryptedPacket.EncryptPacket(message, _formatter, _serverKey, _rsaProvider), _formatter, _writer);
         }
     }
 }
