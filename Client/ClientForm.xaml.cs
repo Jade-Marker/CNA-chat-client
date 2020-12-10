@@ -39,7 +39,6 @@ namespace ClientNamespace
                 MessageWindow.Text += message + Environment.NewLine;
                 MessageWindow.ScrollToEnd();
             });
-
         }
 
         private void SendTypedMessage()
@@ -75,6 +74,7 @@ namespace ClientNamespace
                 InputField.IsEnabled = true;
                 SubmitButton.IsEnabled = true;
                 MessageWindow.IsEnabled = true;
+                Emotes.IsEnabled = true;
 
                 _client.SendMessage(new ConnectionPacket(NameBox.Text, _client.PublicKey));
                 _client.Run();
@@ -96,6 +96,7 @@ namespace ClientNamespace
             InputField.IsEnabled = false;
             SubmitButton.IsEnabled = false;
             MessageWindow.IsEnabled = false;
+            Emotes.IsEnabled = false;
 
             _client.Close();
         }
@@ -155,6 +156,12 @@ namespace ClientNamespace
         {
             if(e.Key == Key.Escape)
                 SwapMessageState(ClientList.SelectedItem as string);
+        }
+
+        private void Emotes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            InputField.Text += Emotes.SelectedItem;
+            Emotes.SelectedItem = null;
         }
     }
 }
