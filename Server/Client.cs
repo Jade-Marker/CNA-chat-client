@@ -41,7 +41,7 @@ namespace Server
             _reader = new BinaryReader(_stream);
             _writer = new BinaryWriter(_stream);
 
-            _name = "User";
+            _name = "";
 
             _rsaProvider = new RSACryptoServiceProvider(Encryption.KeySize);
             PublicKey = _rsaProvider.ExportParameters(false);

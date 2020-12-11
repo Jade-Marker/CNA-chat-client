@@ -19,7 +19,7 @@
 
         <Viewbox KeyDown="Viewbox_KeyDown">
             <Grid>
-                <ListBox x:Name="MessageWindow" HorizontalAlignment="Left" Height="236" VerticalAlignment="Top" Width="585" Margin="38,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox x:Name="MessageWindow" HorizontalAlignment="Left" Height="236" VerticalAlignment="Top" Width="585" Margin="38,10,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Visibility="Hidden">
                     <ListBox.ItemContainerStyle>
                         <!-- this section was made using the code found here: https://stackoverflow.com/q/5361698-->
                         <Style TargetType="{x:Type ListBoxItem}">
@@ -56,6 +56,16 @@
                     <System:String>(&gt;人&lt;)</System:String>
                     <System:String>(╯°□°）╯︵ ┻━┻</System:String>
                 </ListView>
+
+                <ListBox x:Name="ProfileList" HorizontalAlignment="Left" Height="116" Margin="38,73,0,0" VerticalAlignment="Top" Width="585" SelectedIndex="0" SelectionChanged="ProfilePictures_SelectionChanged">
+                    <!--this section was made using the code found here: https://stackoverflow.com/a/1292585-->
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                </ListBox>
+                <TextBlock x:Name="ProfileText" HorizontalAlignment="Left" Height="18" Margin="38,55,0,0" TextWrapping="Wrap" Text="Profile picture:" VerticalAlignment="Top" Width="79"/>
             </Grid>
         </Viewbox>
     </ItemsControl>

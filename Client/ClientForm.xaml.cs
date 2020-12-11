@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,33 +23,21 @@ namespace ClientNamespace
     /// </summary>
     public partial class ClientForm : Window
     {
-        Client _client;
-        bool _messageIsPrivate = false;
+        private Client _client;
+        private bool _messageIsPrivate = false;
 
-        List<BitmapImage> profilePictures;
-        string[] pictures = {"Goomba.png", "Dumbirb2.png" };
-        int profileIndex = 1;
+        private List<BitmapImage> _profilePictures;
+        private int _profileIndex = 0;
 
+        private const int cIconHeightOffset = 10;
+        private const int cChatHeight = 16;
+        private const int cChatWithImageHeight = 32;
 
         public ClientForm(Client client)
         {
             InitializeComponent();
-
             _client = client;
-
-            profilePictures = new List<BitmapImage>();
-
-            foreach (string file in pictures)
-            {
-                BitmapImage profile = new BitmapImage();
-                profile.BeginInit();
-
-                profile.UriSource = new Uri(Environment.CurrentDirectory + "\\Profiles\\" + file);
-
-                profile.EndInit();
-
-                profilePictures.Add(profile);
-            }
+            LoadProfilePictures();
         }
 
         public void UpdateChatWindow(string message, int profilePictureIndex)
@@ -61,17 +50,17 @@ namespace ClientNamespace
                 if (profilePictureIndex != -1)
                 {
                     Image image = new Image();
-                    image.Source = profilePictures[profilePictureIndex];
-                    image.Height = 32;
+                    image.Source = _profilePictures[profilePictureIndex];
+                    image.Height = cChatWithImageHeight;
                     stackPanel.Children.Add(image);
                 }
 
 
                 TextBox chat = new TextBox();
                 if (profilePictureIndex != -1)
-                    chat.Height = 32;
+                    chat.Height = cChatWithImageHeight;
                 else
-                    chat.Height = 20;
+                    chat.Height = cChatHeight;
                 chat.Text = message;
                 chat.Style = FindResource("ChatStyle") as Style;
                 stackPanel.Children.Add(chat);
@@ -89,9 +78,9 @@ namespace ClientNamespace
             if (InputField.Text != "")
             {
                 if (!_messageIsPrivate)
-                    _client.SendEncrypted(new ChatMessagePacket(InputField.Text, profileIndex));
+                    _client.SendEncrypted(new ChatMessagePacket(InputField.Text, _profileIndex));
                 else
-                    _client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text, profileIndex));
+                    _client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text, _profileIndex));
                 InputField.Text = "";
             }
         }
@@ -113,11 +102,14 @@ namespace ClientNamespace
             {
                 ConnectionButton.IsEnabled = false;
                 NameBox.IsEnabled = false;
+                ProfileList.Visibility = Visibility.Hidden;
+                ProfileText.Visibility = Visibility.Hidden;
+
                 DisconnectButton.IsEnabled = true;
                 InputField.IsEnabled = true;
                 SubmitButton.IsEnabled = true;
-                MessageWindow.IsEnabled = true;
                 Emotes.IsEnabled = true;
+                MessageWindow.Visibility = Visibility.Visible;
 
                 _client.SendMessage(new ConnectionPacket(NameBox.Text, _client.PublicKey));
                 _client.Run();
@@ -135,11 +127,14 @@ namespace ClientNamespace
         {
             ConnectionButton.IsEnabled = true;
             NameBox.IsEnabled = true;
+            ProfileList.Visibility = Visibility.Visible;
+            ProfileText.Visibility = Visibility.Visible;
+
             DisconnectButton.IsEnabled = false;
             InputField.IsEnabled = false;
             SubmitButton.IsEnabled = false;
-            MessageWindow.IsEnabled = false;
             Emotes.IsEnabled = false;
+            MessageWindow.Visibility = Visibility.Hidden;
 
             _client.Close();
         }
@@ -205,6 +200,37 @@ namespace ClientNamespace
         {
             InputField.Text += Emotes.SelectedItem;
             Emotes.SelectedItem = null;
+        }
+
+        private void ProfilePictures_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _profileIndex = ProfileList.SelectedIndex;
+        }
+
+        private void LoadProfilePictures()
+        {
+            _profilePictures = new List<BitmapImage>();
+
+            string[] iconFilePaths = Directory.GetFiles(Environment.CurrentDirectory + "\\Profiles\\");
+
+            foreach (string file in iconFilePaths)
+            {
+                if (file.EndsWith(".png"))
+                {
+                    BitmapImage profile = new BitmapImage();
+
+                    profile.BeginInit();
+                    profile.UriSource = new Uri(file);
+                    profile.EndInit();
+
+                    _profilePictures.Add(profile);
+
+                    Image image = new Image();
+                    image.Source = profile;
+                    image.Height = ProfileList.Height - cIconHeightOffset;
+                    ProfileList.Items.Add(image);
+                }
+            }
         }
     }
 }
