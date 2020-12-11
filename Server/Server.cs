@@ -103,7 +103,7 @@ namespace Server
                                 }
                                 else
                                 {
-                                    SendToAllClients(new ChatMessagePacket(client.Name + ": " + message));
+                                    SendToAllClients(new ChatMessagePacket(client.Name + ": " + message, (decrypted as ChatMessagePacket).profilePictureIndex));
                                 }
                                 break;
 
@@ -122,14 +122,14 @@ namespace Server
                                     {
                                         if (currClient.Name == name)
                                         {
-                                            currClient.SendEncrypted(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                                            currClient.SendEncrypted(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage, ((PrivateMessagePacket)decrypted).profilePictureIndex));
                                             clientFound = true;
                                             break;
                                         }
                                     }
 
                                     if (clientFound)
-                                        client.SendEncrypted(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage));
+                                        client.SendEncrypted(new ChatMessagePacket("[" + client.Name + "]: " + privateMessage, ((PrivateMessagePacket)decrypted).profilePictureIndex));
                                     else
                                         client.SendEncrypted(new ChatMessagePacket(name + " was not found"));
                                 }

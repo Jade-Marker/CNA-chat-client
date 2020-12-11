@@ -85,7 +85,7 @@ namespace ClientNamespace
                                 case PacketType.CHAT_MESSAGE:
                                     ChatMessagePacket chatMessagePacket = decrypted as ChatMessagePacket;
                                     foreach (string message in chatMessagePacket.messages)
-                                        _clientForm.UpdateChatWindow(message);
+                                        _clientForm.UpdateChatWindow(message, chatMessagePacket.profilePictureIndex);
 
                                     break;
 

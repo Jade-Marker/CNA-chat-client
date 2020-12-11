@@ -25,19 +25,62 @@ namespace ClientNamespace
         Client _client;
         bool _messageIsPrivate = false;
 
+        List<BitmapImage> profilePictures;
+        string[] pictures = {"Goomba.png", "Dumbirb2.png" };
+        int profileIndex = 1;
+
+
         public ClientForm(Client client)
         {
             InitializeComponent();
 
             _client = client;
+
+            profilePictures = new List<BitmapImage>();
+
+            foreach (string file in pictures)
+            {
+                BitmapImage profile = new BitmapImage();
+                profile.BeginInit();
+
+                profile.UriSource = new Uri(Environment.CurrentDirectory + "\\Profiles\\" + file);
+
+                profile.EndInit();
+
+                profilePictures.Add(profile);
+            }
         }
 
-        public void UpdateChatWindow(string message)
+        public void UpdateChatWindow(string message, int profilePictureIndex)
         {
             MessageWindow.Dispatcher.Invoke(() =>
             {
-                MessageWindow.Text += message + Environment.NewLine;
-                MessageWindow.ScrollToEnd();
+                StackPanel stackPanel = new StackPanel();
+                stackPanel.Orientation = Orientation.Horizontal;
+
+                if (profilePictureIndex != -1)
+                {
+                    Image image = new Image();
+                    image.Source = profilePictures[profilePictureIndex];
+                    image.Height = 32;
+                    stackPanel.Children.Add(image);
+                }
+
+
+                TextBox chat = new TextBox();
+                if (profilePictureIndex != -1)
+                    chat.Height = 32;
+                else
+                    chat.Height = 20;
+                chat.Text = message;
+                chat.Style = FindResource("ChatStyle") as Style;
+                stackPanel.Children.Add(chat);
+
+
+                ListBoxItem item = new ListBoxItem();
+                item.Content = stackPanel;
+                MessageWindow.Items.Add(item);
+                MessageWindow.ScrollIntoView(item);
             });
         }
 
@@ -46,9 +89,9 @@ namespace ClientNamespace
             if (InputField.Text != "")
             {
                 if (!_messageIsPrivate)
-                    _client.SendEncrypted(new ChatMessagePacket(InputField.Text));
+                    _client.SendEncrypted(new ChatMessagePacket(InputField.Text, profileIndex));
                 else
-                    _client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text));
+                    _client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text, profileIndex));
                 InputField.Text = "";
             }
         }
