@@ -17,6 +17,8 @@ namespace Server
         private string _word;
         private Random _random;
 
+        private readonly List<char> cValidGuesses = new List<char>() {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z' };
+
         public List<string> Players { get; private set; }
 
         public HangmanGame()
@@ -49,13 +51,19 @@ namespace Server
             bool isValid = true;
             response = "";
 
-            if (guess.Length != 1)
+            if (guess.Length == 0 || guess.Length > 1)
             {
-                if (guess.Length == 0)
-                    response = "That is not a valid guess";
-                else if (_incorrectLetters.Contains(guess[0]) || _correctLetters.Contains(guess[0]))
-                    response = guess + " is not a valid guess";
-
+                response = "That is not a valid guess";
+                isValid = false;
+            }
+            else if (_incorrectLetters.Contains(guess[0]) || _correctLetters.Contains(guess[0]))
+            {
+                response = guess + " has already been guessed";
+                isValid = false;
+            }
+            else if (!cValidGuesses.Contains(guess[0]))
+            {
+                response = guess + " is not a letter";
                 isValid = false;
             }
 
@@ -122,6 +130,7 @@ namespace Server
         {
             List<string> response = new List<string>();
 
+            guess = guess.ToLower();
             response.Add(name + " guessed " + guess);
 
             string sResponse;
