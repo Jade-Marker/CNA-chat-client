@@ -179,6 +179,39 @@ namespace Server
                     prependServer = false;
                     break;
 
+                case "/help":
+                    response.Add("Commands: ");
+                    response.Add("/hi");
+                    response.Add("Arguments - none");
+                    response.Add("Outputs a basic hello message");
+                    response.Add("");
+
+                    response.Add("/test");
+                    response.Add("Arguments - none");
+                    response.Add("Outputs a basic test message");
+                    response.Add("");
+
+                    response.Add("/game");
+                    response.Add("Arguments - none");
+                    response.Add("");
+
+                    response.Add("/game G");
+                    response.Add("Arguments - G = Hangman guess");
+                    response.Add("Guesses the letter provided in the current game");
+                    response.Add("");
+
+                    response.Add("/game start");
+                    response.Add("Arguments - none");
+                    response.Add("Starts the game of hangman");
+                    response.Add("");
+
+                    response.Add("/game join");
+                    response.Add("Arguments - none");
+                    response.Add("Joins the current game of hangman");
+
+                    prependServer = false;
+                    break;
+
                 default:
                     response.Add("Sorry, I don't understand the command " + code);
                     break;
