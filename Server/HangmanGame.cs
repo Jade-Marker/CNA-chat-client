@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server
 {
@@ -10,6 +8,8 @@ namespace Server
     {
         public bool GameRunning { get; private set; }
         public bool GameStarting { get; private set; }
+        public List<string> Players { get; private set; }
+
         private int _guessesLeft;
         private List<char> _correctLetters;
         private List<char> _incorrectLetters;
@@ -18,8 +18,6 @@ namespace Server
         private Random _random;
 
         private readonly List<char> cValidGuesses = new List<char>() {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z' };
-
-        public List<string> Players { get; private set; }
 
         public HangmanGame()
         {

@@ -1,18 +1,16 @@
 ﻿using Packets;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server
 {
     public class Client
     {
+        public RSAParameters PublicKey { get; private set; }
+        public string Name { get { return _name; } private set { _name = value; } }
+
         private Socket _socket;
         private NetworkStream _stream;
         private BinaryReader _reader;
@@ -24,9 +22,6 @@ namespace Server
         private RSACryptoServiceProvider _rsaProvider;
         private RSAParameters _privateKey;
         private RSAParameters _clientKey;
-
-        public RSAParameters PublicKey { get; private set; }
-        public string Name { get { return _name; } private set { _name = value; } }
 
         public Client(Socket socket)
         {
@@ -91,9 +86,9 @@ namespace Server
             Name = name;
         }
 
-        public void SetClientKey(RSAParameters ClientKey)
+        public void SetClientKey(RSAParameters clientKey)
         {
-            this._clientKey = ClientKey;
+            this._clientKey = clientKey;
         }
     }
 }

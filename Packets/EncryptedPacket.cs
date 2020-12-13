@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Packets
 {
@@ -20,7 +17,7 @@ namespace Packets
             packetType = PacketType.ENCRYPTED;
         }
 
-        public static EncryptedPacket EncryptPacket(Packet message, BinaryFormatter formatter, RSAParameters publicKey, RSACryptoServiceProvider RSAProvider)
+        public static EncryptedPacket EncryptPacket(Packet message, BinaryFormatter formatter, RSAParameters publicKey, RSACryptoServiceProvider rsaProvider)
         {
             MemoryStream memoryStream = new MemoryStream();
             List<byte> encryptedData = new List<byte>();
@@ -42,10 +39,10 @@ namespace Packets
                 offset += dataPortion.Count;
 
                 byte[] data;
-                lock (RSAProvider)
+                lock (rsaProvider)
                 {
-                    RSAProvider.ImportParameters(publicKey);
-                    data = RSAProvider.Encrypt(dataPortion.ToArray(), true);
+                    rsaProvider.ImportParameters(publicKey);
+                    data = rsaProvider.Encrypt(dataPortion.ToArray(), true);
                 }
 
                 encryptedData.AddRange(data);
@@ -55,7 +52,7 @@ namespace Packets
             return packet;
         }
 
-        public static Packet DecryptPacket(EncryptedPacket packet, BinaryFormatter formatter, RSAParameters privateKey, RSACryptoServiceProvider RSAProvider)
+        public static Packet DecryptPacket(EncryptedPacket packet, BinaryFormatter formatter, RSAParameters privateKey, RSACryptoServiceProvider rsaProvider)
         {
             List<byte> decryptedData = new List<byte>();
             int offset = 0;
@@ -72,10 +69,10 @@ namespace Packets
                 offset += dataPortion.Count;
 
                 byte[] data;
-                lock (RSAProvider)
+                lock (rsaProvider)
                 {
-                    RSAProvider.ImportParameters(privateKey);
-                    data = RSAProvider.Decrypt(dataPortion.ToArray(), true);
+                    rsaProvider.ImportParameters(privateKey);
+                    data = rsaProvider.Decrypt(dataPortion.ToArray(), true);
                 }
 
                 decryptedData.AddRange(data);
