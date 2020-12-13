@@ -11,14 +11,16 @@ namespace ClientNamespace
 {
     public class Client
     {
-        public RSAParameters PublicKey { get; private set; }
+        public RSAParameters publicKey { get; private set; }
 
         private TcpClient _tcpClient;
         private NetworkStream _stream;
         private BinaryWriter _writer;
         private BinaryReader _reader;
         private BinaryFormatter _formatter;
+
         private ClientForm _clientForm;
+
         private RSACryptoServiceProvider _rsaProvider;
         private RSAParameters _privateKey;
         private RSAParameters _serverKey;
@@ -39,8 +41,8 @@ namespace ClientNamespace
                 _writer = new BinaryWriter(_stream);
                 _reader = new BinaryReader(_stream);
                 _formatter = new BinaryFormatter();
-                _rsaProvider = new RSACryptoServiceProvider(Encryption.KeySize);
-                PublicKey = _rsaProvider.ExportParameters(false);
+                _rsaProvider = new RSACryptoServiceProvider(Encryption.cKeySize);
+                publicKey = _rsaProvider.ExportParameters(false);
                 _privateKey = _rsaProvider.ExportParameters(true);
                 return true;
             }

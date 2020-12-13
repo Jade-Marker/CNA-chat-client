@@ -8,17 +8,19 @@ namespace Server
 {
     public class Client
     {
-        public RSAParameters PublicKey { get; private set; }
-        public string Name { get { return _name; } private set { _name = value; } }
+        public RSAParameters publicKey { get; private set; }
+        public string name { get { return _name; } private set { _name = value; } }
 
         private Socket _socket;
         private NetworkStream _stream;
         private BinaryReader _reader;
         private BinaryWriter _writer;
         private BinaryFormatter _formatter;
+
         private object _readLock;
         private object _writeLock;
         private string _name;
+
         private RSACryptoServiceProvider _rsaProvider;
         private RSAParameters _privateKey;
         private RSAParameters _clientKey;
@@ -38,8 +40,8 @@ namespace Server
 
             _name = "";
 
-            _rsaProvider = new RSACryptoServiceProvider(Encryption.KeySize);
-            PublicKey = _rsaProvider.ExportParameters(false);
+            _rsaProvider = new RSACryptoServiceProvider(Encryption.cKeySize);
+            publicKey = _rsaProvider.ExportParameters(false);
             _privateKey = _rsaProvider.ExportParameters(true);
         }
 
@@ -66,6 +68,7 @@ namespace Server
                 Packet.SendPacket(message, _formatter, _writer);
             }
         }
+
         public void SendEncrypted(Packet message)
         {
             Send(Encrypt(message));
@@ -83,12 +86,12 @@ namespace Server
 
         public void ChangeName(string name)
         {
-            Name = name;
+            this.name = name;
         }
 
         public void SetClientKey(RSAParameters clientKey)
         {
-            this._clientKey = clientKey;
+            _clientKey = clientKey;
         }
     }
 }

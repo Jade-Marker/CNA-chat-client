@@ -8,6 +8,7 @@ namespace Packets
     {
         public string name;
         public RSAParameters publicKey;
+
         public ConnectionPacket(string name, RSAParameters publicKey)
         {
             this.name = name;

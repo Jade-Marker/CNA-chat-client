@@ -9,12 +9,14 @@ namespace Packets
         public List<string> messages;
         public int profilePictureIndex;
 
-        public string message { get {
+        public string message { 
+            get {
                 if (messages.Count >= 1)
                     return messages[0];
                 else
                     return "";
-            } }
+            }
+        }
 
         public ChatMessagePacket(List<string> messages)
         {
@@ -27,17 +29,18 @@ namespace Packets
         {
             messages = new List<string>();
             messages.Add(message);
+
             profilePictureIndex = -1;
 
             packetType = PacketType.CHAT_MESSAGE;
         }
 
-        public ChatMessagePacket(string message, int profilePicture)
+        public ChatMessagePacket(string message, int profilePictureIndex)
         {
             messages = new List<string>();
             messages.Add(message);
 
-            this.profilePictureIndex = profilePicture;
+            this.profilePictureIndex = profilePictureIndex;
 
             packetType = PacketType.CHAT_MESSAGE;
         }

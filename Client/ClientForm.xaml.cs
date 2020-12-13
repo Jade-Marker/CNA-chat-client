@@ -24,12 +24,16 @@ namespace ClientNamespace
         private const int cIconHeightOffset = 10;
         private const int cChatHeight = 16;
         private const int cChatWithImageHeight = 32;
+        private const string cIpAddress = "127.0.0.1";
+        private const int cPort = 4444;
 
         public ClientForm(Client client)
         {
             InitializeComponent();
             _client = client;
-            LoadProfilePictures();
+
+            LoadProfilePictures(); 
+            InitProfileList();
         }
 
         public void UpdateChatWindow(string message, int profilePictureIndex)
@@ -73,6 +77,7 @@ namespace ClientNamespace
                     _client.SendEncrypted(new ChatMessagePacket(InputField.Text, _profileIndex));
                 else
                     _client.SendEncrypted(new PrivateMessagePacket(ClientList.SelectedItem as string, InputField.Text, _profileIndex));
+
                 InputField.Text = "";
             }
         }
@@ -90,7 +95,7 @@ namespace ClientNamespace
 
         private void ConnectionButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_client.Connect("127.0.0.1", 4444))
+            if (_client.Connect(cIpAddress, cPort))
             {
                 ConnectionButton.IsEnabled = false;
                 NameBox.IsEnabled = false;
@@ -103,7 +108,7 @@ namespace ClientNamespace
                 Emotes.IsEnabled = true;
                 MessageWindow.Visibility = Visibility.Visible;
 
-                _client.SendMessage(new ConnectionPacket(NameBox.Text, _client.PublicKey));
+                _client.SendMessage(new ConnectionPacket(NameBox.Text, _client.publicKey));
                 _client.Run();
             }
             else
@@ -171,6 +176,7 @@ namespace ClientNamespace
                 _messageIsPrivate = true;
             else
                 _messageIsPrivate = false;
+
             TargetText.Text = target;
         }
 
@@ -216,12 +222,18 @@ namespace ClientNamespace
                     profile.EndInit();
 
                     _profilePictures.Add(profile);
-
-                    Image image = new Image();
-                    image.Source = profile;
-                    image.Height = ProfileList.Height - cIconHeightOffset;
-                    ProfileList.Items.Add(image);
                 }
+            }
+        }
+
+        private void InitProfileList()
+        {
+            foreach (BitmapImage profile in _profilePictures)
+            {
+                Image profileImage = new Image();
+                profileImage.Source = profile;
+                profileImage.Height = ProfileList.Height - cIconHeightOffset;
+                ProfileList.Items.Add(profileImage);
             }
         }
     }
